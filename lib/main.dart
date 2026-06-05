@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:locate_me/map_screen.dart';
+import 'package:locate_me/features/map/screens/map_screen.dart';
 
 void main() {
   runApp(const MyApp());
