@@ -20,4 +20,7 @@ class AppConstants {
   static const int markerAnimSteps = 200;
   static const double defaultZoom = 15.0;
   static const double routeZoom = 13.0;
+
+  static const double defaultLatitude = 12.3681873;
+  static const double defaultLongitude = -1.5270944;
 }
