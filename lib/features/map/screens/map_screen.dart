@@ -66,7 +66,8 @@ class _MapScreenState extends ConsumerState<MapScreen> {
             mapController: mapController,
             options: MapOptions(
               initialZoom: AppConstants.defaultZoom,
-              initialCenter: location.position ?? defaultCenter,
+              initialCenter:
+                  defaultCenter, //location.position ?? defaultCenter,
               onMapReady: _onMapReady,
               interactionOptions: const InteractionOptions(
                 flags:
@@ -119,42 +120,50 @@ class _MapScreenState extends ConsumerState<MapScreen> {
             ],
           ),
 
-          //---Search Bar top 
+          //---Search Bar top
           Positioned(
-            top : MediaQuery.of(context).padding.top + 12 ,
-            child: const SearchBarWidget()),
+            top: MediaQuery.of(context).padding.top + 12,
+            left: 16,
+            right: 16,
+            child: const SearchBarWidget(),
+          ),
 
           //Map Controller right
           Positioned(right: 16, bottom: 200, child: const MapController()),
-          
+
           //--location error message
-          if(location.errorMessage != null)
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 80,
-            left: 16,
-            right:16,
-            child: Material( 
-              borderRadius: BorderRadius.circular(12),
-              color: Colors.red,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-                child: Row(
-                  children: [
-                    const Icon(Icons.warning_rounded, color: Colors.white),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        location.errorMessage!,
-                        style: const TextStyle(color: Colors.white, fontSize: 16),
-                        textAlign: TextAlign.center,
+          if (location.errorMessage != null)
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 80,
+              left: 16,
+              right: 16,
+              child: Material(
+                borderRadius: BorderRadius.circular(12),
+                color: Colors.red,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical: 12.0,
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.warning_rounded, color: Colors.white),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          location.errorMessage!,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
-
-          ),
         ],
       ),
     );

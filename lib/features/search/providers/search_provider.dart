@@ -1,4 +1,3 @@
-
 //Dio singleton
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,46 +6,47 @@ import 'package:locate_me/core/utils/app_constants.dart';
 import 'package:locate_me/features/search/models/place_models.dart';
 
 final dioProvider = Provider<Dio>((ref) {
-   return Dio(
+  return Dio(
     BaseOptions(
-      baseUrl:  AppConstants.nominatimBaseUrl,
-      headers: {'User-Agent' : 'locateME/1.0'},
+      baseUrl: AppConstants.nominatimBaseUrl,
+      headers: {'User-Agent': 'locateME/1.0 (amidoug7@gmail.com)'},
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
-      )
-   );
+    ),
+  );
 });
-
 
 //Search Query Notifier
 final searchQueryProvider = StateProvider<String>((ref) => '');
 
-
 //AutoComplete suggestions
-final searchSuggestionsProvider = FutureProvider.autoDispose<List<PlaceModels>>((ref) async {
-  final query = ref.watch(searchQueryProvider);
-  if(query.trim().length < 3) return [];
+final searchSuggestionsProvider = FutureProvider.autoDispose<List<PlaceModels>>(
+  (ref) async {
+    final query = ref.watch(searchQueryProvider);
+    if (query.trim().length < 3) return [];
 
-  final dio = ref.watch(dioProvider);
+    final dio = ref.watch(dioProvider);
 
-  try{
-    final response = await dio.get(
-      '/search',
-      queryParameters: {
-        'q': query,
-        'format' : 'json',
-        'limit' : 5,
-        'addressdetails' : 1,
-      } ,
-    );
+    try {
+      final response = await dio.get(
+        '/search',
+        queryParameters: {
+          'q': query,
+          'format': 'json',
+          'limit': 5,
+          'addressdetails': 1,
+        },
+      );
 
-    final List data = response.data as List ;
-    return data.map((e) =>  PlaceModels.fromJson(e as Map<String, dynamic>)).toList();
-
-  } on DioException {
-    return [];
-  }
-}) ;
+      final List data = response.data as List;
+      return data
+          .map((e) => PlaceModels.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on DioException {
+      return [];
+    }
+  },
+);
 
 //Selected Destination
 final selectedPlaceProvider = StateProvider<PlaceModels?>((ref) => null);
