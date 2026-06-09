@@ -8,6 +8,7 @@ import 'package:locate_me/features/map/providers/location_provider.dart';
 import 'package:locate_me/features/map/providers/map_controller_provider.dart';
 import 'package:locate_me/features/map/widgets/custom_marker.dart';
 import 'package:locate_me/features/map/widgets/map_controller.dart';
+import 'package:locate_me/features/search/widgets/search_bar_widget.dart';
 
 class MapScreen extends ConsumerStatefulWidget {
   const MapScreen({super.key});
@@ -117,8 +118,43 @@ class _MapScreenState extends ConsumerState<MapScreen> {
               ),
             ],
           ),
+
+          //---Search Bar top 
+          Positioned(
+            top : MediaQuery.of(context).padding.top + 12 ,
+            child: const SearchBarWidget()),
+
           //Map Controller right
           Positioned(right: 16, bottom: 200, child: const MapController()),
+          
+          //--location error message
+          if(location.errorMessage != null)
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 80,
+            left: 16,
+            right:16,
+            child: Material( 
+              borderRadius: BorderRadius.circular(12),
+              color: Colors.red,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                child: Row(
+                  children: [
+                    const Icon(Icons.warning_rounded, color: Colors.white),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        location.errorMessage!,
+                        style: const TextStyle(color: Colors.white, fontSize: 16),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+          ),
         ],
       ),
     );

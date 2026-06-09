@@ -23,6 +23,10 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // Version correcte en Kotlin DSL (si nécessaire, sinon supprimez la ligne)
+        manifestPlaceholders["cleartextTrafficPermitted"] = "true"
+
     }
 
     buildTypes {

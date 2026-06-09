@@ -3,6 +3,9 @@ class AppConstants {
   static const String osrmBaseUrl =
       'https://router.project-osrm.org/route/v1/driving/';
 
+  // Pour la recherche d'adresses et de lieux
+  static const String nominatimBaseUrl = 'https://nominatim.openstreetmap.org';
+
   //Default Map tile Url(OpenStreetMap)
   static const String defaultMapTileUrl =
       'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
