@@ -8,6 +8,10 @@ import 'package:locate_me/features/map/providers/location_provider.dart';
 import 'package:locate_me/features/map/providers/map_controller_provider.dart';
 import 'package:locate_me/features/map/widgets/custom_marker.dart';
 import 'package:locate_me/features/map/widgets/map_controller.dart';
+import 'package:locate_me/features/navigations/models/route_state.dart';
+import 'package:locate_me/features/navigations/providers/route_provider.dart';
+import 'package:locate_me/features/navigations/widgets/route_info_panel.dart';
+import 'package:locate_me/features/search/providers/search_provider.dart';
 import 'package:locate_me/features/search/widgets/search_bar_widget.dart';
 
 class MapScreen extends ConsumerStatefulWidget {
@@ -40,12 +44,25 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     }
   }
 
+  //Auto-Follow animated marker during !navigation
+  void _handleNavigationCamera(RouteState route) {
+    if (!_mapReady) return;
+    if (route.status == NavigationStatus.navigation &&
+        route.animatedMarkerPos != null) {
+      ref
+          .read(mapControllerProvider)
+          .moveSmooth(route.animatedMarkerPos!, zoom: AppConstants.defaultZoom);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     //Watch providers
     final location = ref.watch(locationProvider);
     final isSatellite = ref.watch(isSatelliteProvider);
     final mapController = ref.watch(mapControllerProvider);
+    final destination = ref.watch(selectedPlaceProvider);
+    final route = ref.watch(routeProvider);
 
     // Move Camera to users GPS position once it first becomes avaible
     ref.listen(locationProvider, (prev, next) {
@@ -58,6 +75,9 @@ class _MapScreenState extends ConsumerState<MapScreen> {
             .moveSmooth(next.position!, zoom: AppConstants.defaultZoom);
       }
     });
+
+    //Follow animated marker during navigation
+    ref.listen(routeProvider, (_, next) => _handleNavigationCamera(next));
 
     return Scaffold(
       body: Stack(
@@ -84,6 +104,38 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                 userAgentPackageName: 'com.exemple.locate_me',
               ),
 
+              // Route polyline
+              if (route.routePoints.isNotEmpty)
+                PolylineLayer(
+                  polylines: [
+                    //shadow
+                    Polyline(
+                      points: route.routePoints,
+                      strokeWidth: 8,
+                      color: Colors.black.withAlpha(20),
+                    ),
+                    Polyline(
+                      points: route.routePoints,
+                      strokeWidth: 5,
+                      color: const Color(0xFF1565C0),
+                      strokeCap: StrokeCap.round,
+                      strokeJoin: StrokeJoin.round,
+                    ),
+
+                    //animated progress overlay
+                    if (route.status == NavigationStatus.navigation &&
+                        route.currentSegmentIndex > 0)
+                      Polyline(
+                        points: route.routePoints
+                            .take(route.currentSegmentIndex)
+                            .toList(),
+                        strokeWidth: 5,
+                        color: Colors.green,
+                        strokeCap: StrokeCap.round,
+                      ),
+                  ],
+                ),
+
               //Marker Layers
               MarkerLayer(
                 markers: [
@@ -95,29 +147,34 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                       child: UserLocationMarker(heading: location.heading ?? 0),
                     ),
 
-                  //Destination
-                  // if(destination != null &&
-                  // route.status != NavigationStatus.navigation)
-                  // Marker(
-                  //   point: destination.latlng,
-                  //   width : 50,
-                  //   height: 70,
-                  //   child: const DestinationMarker(),
-                  //    ),
+                  //------------Destination-----------//
+                  if (destination != null &&
+                      route.status != NavigationStatus.navigation)
+                    Marker(
+                      point: destination.latLng,
+                      width: 50,
+                      height: 70,
+                      child: const DestinationMarker(),
+                    ),
 
-                  //    if(route.animatedMarkerPos != null &&
-                  //    route.status == NavigationStatus.navigation)
-                  // Marker(
-                  //   point: route.animatedMarkerPos!,
-                  //   width: 44,
-                  //   height: 44,
-                  //   child: const NavigationMarker(
-                  //     bearing: route.animatedMarkerBearing ?? 0 ,
-                  //   ),
-                  // ),
+                  if (route.animatedMarkerPos != null &&
+                      route.status == NavigationStatus.navigation)
+                    Marker(
+                      point: route.animatedMarkerPos!,
+                      width: 44,
+                      height: 44,
+                      child: NavigationMarker(
+                        bearing: route.animatedMarkerBearing ?? 0,
+                      ),
+                    ),
                 ],
               ),
             ],
+          ),
+
+          //OSM Attribute (required)
+          const RichAttributionWidget(
+            attributions: [TextSourceAttribution('OpenStreetMap cntributors')],
           ),
 
           //---Search Bar top
@@ -130,6 +187,35 @@ class _MapScreenState extends ConsumerState<MapScreen> {
 
           //Map Controller right
           Positioned(right: 16, bottom: 200, child: const MapController()),
+
+          // --- Route Fetch Loading
+          if (route.status == NavigationStatus.loading)
+            const Positioned(
+              bottom: 120,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Card(
+                  child: Padding(
+                    padding: EdgeInsetsGeometry.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
+                    child: Row(
+                      children: [
+                        SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                        SizedBox(width: 12),
+                        Text('Recherche un meilleur itinéraire'),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
 
           //--location error message
           if (location.errorMessage != null)
@@ -160,6 +246,33 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                         ),
                       ),
                     ],
+                  ),
+                ),
+              ),
+            ),
+
+          // -- Route info Pannel
+          Positioned(
+            bottom: MediaQuery.of(context).padding.bottom,
+            left: 16, 
+            right: 16, 
+            child: RouteInfoPanel()),
+
+          // --- Route Error Display
+          if (route.errorMessage != null)
+            Positioned(
+              bottom: 100,
+              left: 16,
+              right: 16,
+              child: Material(
+                borderRadius: BorderRadius.circular(12),
+                color: Colors.red,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Text(
+                    route.errorMessage!,
+                    style: const TextStyle(color: Colors.white),
+                    textAlign: TextAlign.center,
                   ),
                 ),
               ),

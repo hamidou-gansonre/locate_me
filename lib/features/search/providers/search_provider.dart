@@ -20,33 +20,37 @@ final dioProvider = Provider<Dio>((ref) {
 final searchQueryProvider = StateProvider<String>((ref) => '');
 
 //AutoComplete suggestions
-final searchSuggestionsProvider = FutureProvider.autoDispose<List<PlaceModels>>(
-  (ref) async {
-    final query = ref.watch(searchQueryProvider);
-    if (query.trim().length < 3) return [];
+final searchSuggestionsProvider = FutureProvider.autoDispose<List<PlaceModels>>((
+  ref,
+) async {
+  final query = ref.watch(searchQueryProvider);
+  if (query.trim().length < 3) return [];
 
-    final dio = ref.watch(dioProvider);
+  final dio = ref.watch(dioProvider);
 
-    try {
-      final response = await dio.get(
-        '/search',
-        queryParameters: {
-          'q': query,
-          'format': 'json',
-          'limit': 5,
-          'addressdetails': 1,
-        },
-      );
+  try {
+    final response = await dio.get(
+      '/search',
+      queryParameters: {
+        'q': query,
+        'format': 'json',
+        'limit': 5,
+        'addressdetails': 1,
+      },
+    );
 
-      final List data = response.data as List;
-      return data
-          .map((e) => PlaceModels.fromJson(e as Map<String, dynamic>))
-          .toList();
-    } on DioException {
-      return [];
-    }
-  },
-);
+    final List data = response.data as List;
+    return data
+        .map((e) => PlaceModels.fromJson(e as Map<String, dynamic>))
+        .toList();
+    // Old code that was catching DioException and returning empty list:
+  } on DioException {
+    return [];
+    // } catch (e) {
+    // print('Search error: $e');
+    //    rethrow; // Re-throw to display proper error state instead of empty results
+  }
+});
 
 //Selected Destination
 final selectedPlaceProvider = StateProvider<PlaceModels?>((ref) => null);

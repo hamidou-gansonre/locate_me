@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:locate_me/features/map/providers/map_controller_provider.dart';
+import 'package:locate_me/features/navigations/providers/route_provider.dart';
 import 'package:locate_me/features/search/models/place_models.dart';
 import 'package:locate_me/features/search/providers/search_provider.dart';
 
@@ -41,8 +42,10 @@ class _SearchBarWidgetState extends ConsumerState<SearchBarWidget> {
     _controller.text = place.shortName;
     _focus.unfocus();
     setState(() => _showSuggestions = false);
+
     ref.read(selectedPlaceProvider.notifier).state = place;
-    //ref.read(routeProvider.notifier).fetchRoute();
+    //For Route Provider
+    ref.read(routeProvider.notifier).fetchRoute();
 
     final mapController = ref.read(mapControllerProvider);
     mapController.moveSmooth(place.latLng, zoom: 14);
@@ -52,7 +55,7 @@ class _SearchBarWidgetState extends ConsumerState<SearchBarWidget> {
     _controller.clear();
     ref.read(searchQueryProvider.notifier).state = '';
     ref.read(selectedPlaceProvider.notifier).state = null;
-    //ref.read(routeProvider.notifier).clearRoute();
+    ref.read(routeProvider.notifier).clearRoute();
     setState(() => _showSuggestions = false);
   }
 
@@ -131,7 +134,7 @@ class _SearchBarWidgetState extends ConsumerState<SearchBarWidget> {
                   ),
                 ),
               ),
-              error: (BuildContext, ints) => const Padding(
+              error: (buildContext, ints) => const Padding(
                 padding: EdgeInsets.all(12),
                 child: Text('Recherche Echoué, Essayer Encore'),
               ),
@@ -150,7 +153,7 @@ class _SearchBarWidgetState extends ConsumerState<SearchBarWidget> {
                   physics: const NeverScrollableScrollPhysics(),
                   padding: const EdgeInsets.symmetric(vertical: 6),
                   itemCount: places.length,
-                  separatorBuilder: (BuildContext, ints) => Divider(
+                  separatorBuilder: (buildContext, ints) => Divider(
                     height: 1,
                     indent: 52,
                     color: Colors.grey.shade100,
